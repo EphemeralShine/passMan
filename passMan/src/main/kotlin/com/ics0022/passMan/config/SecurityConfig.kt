@@ -30,6 +30,7 @@ class SecurityConfig(
                     .permitAll()
             }
             .logout { logout ->
+                logout.logoutSuccessUrl("/login")
                 logout.permitAll()
             }
             .sessionManagement { session ->

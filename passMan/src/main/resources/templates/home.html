@@ -1,19 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="https://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Vault Creation</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        thead, tbody, tfoot {
+            border: 2px solid black;
+        }
+
+        tr {
+            border: 1px solid black;
+        }
+        th {
+            border: 1px solid black;
+            padding: 8px;
+        }
+        td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+    </style>
 </head>
 <body>
-<h1>hi</h1>
-<form th:action="@{/home}" method="post">
+<h1>Welcome</h1>
+
+<h2>Create a New Password Entry</h2>
+<form th:action="@{/home/createEntry}" method="post">
     <div>
-        <label for="vault">vault:</label>
-        <input type="text" id="vault" name="vault">
+        <label for="vaultName">Entry Name:</label>
+        <input type="text" id="vaultName" name="vaultName" required>
+        <label for="masterPassword">Password:</label>
+        <input type="text" id="masterPassword" name="masterPassword" required>
     </div>
     <div>
-        <button type="submit">Login</button>
+        <button type="submit">Create Entry</button>
     </div>
+</form>
+
+<div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+</div>
+
+<div th:if="${success}">
+    <p style="color: green;" th:text="${success}"></p>
+</div>
+
+<h2>Your Existing Password Entries:</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Entry Name</th>
+        <th>Password</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="vault : ${vaults}">
+        <td th:text="${vault.name}"></td>
+        <td th:text="${vault.password}"></td>
+        <td>
+            <button type="button">Edit</button>
+            <button type="button">Delete</button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<form th:action="@{/logout}" method="post">
+    <button type="submit" class="logout-button">Logout</button>
 </form>
 </body>
 </html>

@@ -3,18 +3,16 @@ package com.ics0022.passMan.model
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "users")
-data class User(
+@Table(name = "entries")
+data class Entry (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
-
     @Column(nullable = false, unique = true)
-    val username: String = "",
-
+    val name: String = "",
     @Column(nullable = false)
     val password: String = "",
-
-    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    val vaults: List<Entry> = mutableListOf()
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    val user: User
 )
