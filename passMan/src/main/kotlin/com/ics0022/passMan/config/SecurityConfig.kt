@@ -20,7 +20,7 @@ class SecurityConfig(
         http
             .authorizeHttpRequests { requests ->
                 requests
-                    .requestMatchers("/public/**", "/register", "/login",  "/h2-console/**").permitAll()
+                    .requestMatchers("/public/**", "/register", "/login", "/h2-console/**").permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { login ->
@@ -40,6 +40,12 @@ class SecurityConfig(
             .csrf { csrf ->
                 csrf
                     .csrfTokenRepository(HttpSessionCsrfTokenRepository())
+            }
+            .csrf { csrf ->
+                csrf.ignoringRequestMatchers("/h2-console/**")
+            }
+            .headers { headers ->
+                headers.disable() // This allows the H2 console to render inside a frame
             }
         return http.build()
     }
