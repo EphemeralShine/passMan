@@ -1,23 +1,22 @@
 package com.ics0022.passMan.config
 
-import com.ics0022.passMan.service.CustomUserDetailsService
+import org.springframework.boot.web.server.ConfigurableWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository
 
 @Configuration
 class SecurityConfig(
-    private val customUserDetailsService: CustomUserDetailsService
 ) {
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun securityFilterChain(http: HttpSecurity, configurableWebServerFactory: ConfigurableWebServerFactory): SecurityFilterChain {
         http
             .authorizeHttpRequests { requests ->
                 requests
@@ -27,6 +26,7 @@ class SecurityConfig(
             .formLogin { login ->
                 login
                     .loginPage("/login")
+                    .defaultSuccessUrl("/home", true)
                     .permitAll()
             }
             .logout { logout ->
@@ -37,14 +37,10 @@ class SecurityConfig(
                     .maximumSessions(1)
                     .expiredUrl("/login?expired=true")
             }
-            // Disable CSRF for H2 console (required by H2's web interface)
             .csrf { csrf ->
-                csrf.ignoringRequestMatchers("/h2-console/**")
+                csrf
+                    .csrfTokenRepository(HttpSessionCsrfTokenRepository())
             }
-            .headers { headers ->
-                headers.disable() // This allows the H2 console to render inside a frame
-            }
-
         return http.build()
     }
 
