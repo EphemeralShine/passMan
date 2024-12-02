@@ -15,6 +15,9 @@ data class User(
     @Column(nullable = false)
     val password: String = "",
 
+    @Column(nullable = false)
+    val masterPassword: String = "",
+
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val vaults: List<Entry> = mutableListOf()
 )

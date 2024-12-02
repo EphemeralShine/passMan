@@ -1,17 +1,23 @@
 package com.ics0022.passMan.controller
-
+import com.ics0022.passMan.model.Entry
+import com.ics0022.passMan.model.User
 import com.ics0022.passMan.repository.UserRepository
 import com.ics0022.passMan.service.EntryService
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import java.util.*
 
 @Controller
 class EntryController(
     private val userRepository: UserRepository,
-    private val entryService: EntryService
+    private val entryService: EntryService,
+    private val passwordEncoder: PasswordEncoder
 ) {
 
     @PostMapping("/home/createEntry")
@@ -26,6 +32,30 @@ class EntryController(
             return "redirect:/home"
         } catch (e: Exception) {
             model.addAttribute("error", "Something went wrong")
+            return "redirect:/home"
+        }
+
+    }
+
+    @PostMapping("/home")
+    fun handleVaultPassword(
+        @RequestParam vaultId: UUID,
+        @RequestParam vaultPassword: String,
+        model: Model
+    ): String {
+        //val authentication: Authentication = SecurityContextHolder.getContext().authentication
+        //val loggedInUser = authentication.principal
+        val vault: Entry? = entryService.getEntryById(vaultId)
+
+        if (vault != null){// && vault.user.id == loggedInUser.getId()) {
+            if (passwordEncoder.matches(vaultPassword, vault.password)) {
+            return "redirect:/vaultDashboard"
+        } else {
+            model.addAttribute("error", "Invalid password!")
+            return "redirect:/home"
+        }
+        } else {
+            model.addAttribute("error", "Vault not found!")
             return "redirect:/home"
         }
 

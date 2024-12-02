@@ -28,16 +28,16 @@
 <body>
 <h1>Welcome</h1>
 
-<h2>Create a New Password Entry</h2>
+<h2>Create a New Vault</h2>
 <form th:action="@{/home/createEntry}" method="post">
     <div>
-        <label for="vaultName">Entry Name:</label>
+        <label for="vaultName">Vault Name:</label>
         <input type="text" id="vaultName" name="vaultName" required>
         <label for="masterPassword">Password:</label>
         <input type="text" id="masterPassword" name="masterPassword" required>
     </div>
     <div>
-        <button type="submit">Create Entry</button>
+        <button type="submit">Create Vault</button>
     </div>
 </form>
 
@@ -49,21 +49,24 @@
     <p style="color: green;" th:text="${success}"></p>
 </div>
 
-<h2>Your Existing Password Entries:</h2>
+<h2>Your Existing Vaults:</h2>
 <table>
     <thead>
     <tr>
-        <th>Entry Name</th>
-        <th>Password</th>
+        <th>Vault Name</th>
         <th>Actions</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="vault : ${vaults}">
         <td th:text="${vault.name}"></td>
-        <td th:text="${vault.password}"></td>
         <td>
-            <button type="button">Edit</button>
+            <form th:action="@{/home}" method="post">
+                <label for="vaultPassword">Vault Password:</label>
+                <input type="text" id="vaultPassword" name="vaultPassword" required>
+                <input type="hidden" th:value="${vault.id}" name="vaultId">
+                <button type="submit">View Vault</button>
+            </form>
             <button type="button">Delete</button>
         </td>
     </tr>
