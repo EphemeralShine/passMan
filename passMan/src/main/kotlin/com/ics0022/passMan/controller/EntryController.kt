@@ -11,6 +11,7 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import java.security.Principal
 import java.util.*
 
 @Controller
@@ -43,11 +44,11 @@ class EntryController(
         @RequestParam vaultPassword: String,
         model: Model
     ): String {
-        //val authentication: Authentication = SecurityContextHolder.getContext().authentication
-        //val loggedInUser = authentication.principal
+        val authentication: Authentication = SecurityContextHolder.getContext().authentication
+        val loggedInUser = authentication.principal as org.springframework.security.core.userdetails.User
         val vault: Entry? = entryService.getEntryById(vaultId)
 
-        if (vault != null){// && vault.user.id == loggedInUser.getId()) {
+        if (vault != null && vault.user.username == loggedInUser.username) {
             if (passwordEncoder.matches(vaultPassword, vault.password)) {
             return "redirect:/vaultDashboard"
         } else {
