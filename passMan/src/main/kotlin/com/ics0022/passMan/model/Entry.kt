@@ -7,14 +7,19 @@ import java.util.UUID
 @Table(name = "entries")
 data class Entry (
     @Id
-    val id: UUID = UUID.randomUUID(),
     @Column(nullable = false, unique = true)
+    val id: UUID = UUID.randomUUID(),
+    @Column(nullable = false)
     val name: String = "",
     @Column(nullable = false)
     val password: String = "",
+    @Column(nullable = false)
+    val salt: ByteArray,
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    val user: User
+    val user: User,
+    @OneToMany(mappedBy = "vault", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val passwords: List<Password> = mutableListOf()
 ){
     override fun toString(): String {
         return "Entry(name=$name, password=$password)"

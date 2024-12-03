@@ -1,10 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title th:text="${vault.name}">Vault Dashboard</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        thead, tbody, tfoot {
+            border: 2px solid black;
+        }
+
+        tr {
+            border: 1px solid black;
+        }
+        th {
+            border: 1px solid black;
+            padding: 8px;
+        }
+        td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+    </style>
 </head>
 <body>
-1
+<header>
+    <h1 th:text="'Vault: ' + ${vault.name}">Vault</h1>
+</header>
+<a href="/home">Back to Home</a>
+<h2>Create a New Password Entry</h2>
+<form th:action="@{{vaultId}/createEntry(vaultId=${vault.id})}" method="post">
+    <div>
+        <label for="name">Service Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="password">Password:</label>
+        <input type="text" id="password" name="password" required>
+    </div>
+    <div>
+        <button type="submit">Create Entry</button>
+    </div>
+</form>
+
+<div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+</div>
+
+<div th:if="${success}">
+    <p style="color: green;" th:text="${success}"></p>
+</div>
+
+<h2 th:text="'Vault ' + ${vault.name} + ' Password Entries'">Vault Passwords:</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Service Name</th>
+        <th>Password</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="password : ${decryptedPasswords}">
+        <td th:text="${password.name}"></td>
+        <td th:text="${password.password}"></td>
+        <td>
+            <button type="button">Delete</button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<form th:action="@{/logout}" method="post">
+    <button type="submit" class="logout-button">Logout</button>
+</form>
 </body>
 </html>

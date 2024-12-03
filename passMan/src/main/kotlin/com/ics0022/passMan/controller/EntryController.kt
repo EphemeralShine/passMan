@@ -1,17 +1,16 @@
 package com.ics0022.passMan.controller
 import com.ics0022.passMan.model.Entry
-import com.ics0022.passMan.model.User
 import com.ics0022.passMan.repository.UserRepository
 import com.ics0022.passMan.service.EntryService
+import com.ics0022.passMan.util.KDFutil
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
-import java.security.Principal
 import java.util.*
 
 @Controller
@@ -42,15 +41,21 @@ class EntryController(
     fun handleVaultPassword(
         @RequestParam vaultId: UUID,
         @RequestParam vaultPassword: String,
-        model: Model
+        model: Model,
+        request: HttpServletRequest
     ): String {
         val authentication: Authentication = SecurityContextHolder.getContext().authentication
-        val loggedInUser = authentication.principal as org.springframework.security.core.userdetails.User
+        val loggedInUser = authentication.name
         val vault: Entry? = entryService.getEntryById(vaultId)
 
-        if (vault != null && vault.user.username == loggedInUser.username) {
+        if (vault != null && vault.user.username == loggedInUser) {
             if (passwordEncoder.matches(vaultPassword, vault.password)) {
-            return "redirect:/vaultDashboard"
+                val kdfUtil = KDFutil()
+                val session = request.session
+                val encryptionKey = kdfUtil.deriveEncryptionKey(vaultPassword, vault.salt)
+
+                session.setAttribute(vault.name, encryptionKey)
+            return "redirect:/vaultDashboard/${vaultId}"
         } else {
             model.addAttribute("error", "Invalid password!")
             return "redirect:/home"
