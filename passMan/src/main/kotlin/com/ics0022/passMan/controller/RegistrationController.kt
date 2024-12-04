@@ -7,6 +7,7 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 
 @Controller
 class RegistrationController(
@@ -23,14 +24,16 @@ class RegistrationController(
     fun register(
         @RequestParam username: String,
         @RequestParam password: String,
-        model: Model
+        model: Model,
+        redirectAttributes: RedirectAttributes
     ): String {
         try {
             userService.registerUser(username, password)
+            redirectAttributes.addFlashAttribute("success", "User registered successfully!")
             return "redirect:/login"
         } catch (e: Exception) {
-            model.addAttribute("error", "User already exists")
-            return "register"
+            redirectAttributes.addFlashAttribute("error", "Username already in use")
+            return "redirect:/register"
         }
     }
 }

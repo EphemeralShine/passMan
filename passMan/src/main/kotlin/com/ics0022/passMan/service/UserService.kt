@@ -11,6 +11,10 @@ class UserService(
     private val passwordEncoder: PasswordEncoder
 ) {
     fun registerUser(username: String, rawPassword: String): User {
+        val existingUser = userRepository.findByUsername(username)
+        if (existingUser != null) {
+            throw Exception("User already exists")
+        }
         val encodedPassword = passwordEncoder.encode(rawPassword)
         val user = User(username = username, password = encodedPassword)
         return userRepository.save(user)

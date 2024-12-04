@@ -26,7 +26,8 @@ class DashboardController(
     fun showVault(
         @PathVariable vaultId: UUID,
         request: HttpServletRequest,
-        model: Model
+        model: Model,
+        redirectAttributes: RedirectAttributes
     ): String {
         val auth = SecurityContextHolder.getContext().authentication
         val username = auth.name
@@ -41,8 +42,8 @@ class DashboardController(
 
         val vaultPasswords = vault.passwords
 
-        model.addAttribute("vault", vault)
-        model.addAttribute("passwords", vaultPasswords)
+        redirectAttributes.addFlashAttribute("vault", vault)
+        redirectAttributes.addFlashAttribute("passwords", vaultPasswords)
         return "vaultDashboard"
     }
 

@@ -11,27 +11,33 @@ import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.util.*
 
 @Controller
 class EntryController(
     private val userRepository: UserRepository,
     private val entryService: EntryService,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
 ) {
 
     @PostMapping("/home/createEntry")
-    fun createVault(@RequestParam vaultName: String, @RequestParam masterPassword: String, model: Model): String {
+    fun createVault(
+        @RequestParam vaultName: String,
+        @RequestParam masterPassword: String,
+        model: Model,
+        redirectAttributes: RedirectAttributes
+    ): String {
         val auth = SecurityContextHolder.getContext().authentication
         val username = auth.name
         val user = userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
 
         try{
         entryService.createEntry(name = vaultName, rawPassword = masterPassword, user = user)
-        model.addAttribute("success", "Vault created successfully!")
+            redirectAttributes.addFlashAttribute("success", "Vault created successfully!")
             return "redirect:/home"
         } catch (e: Exception) {
-            model.addAttribute("error", "Something went wrong")
+            redirectAttributes.addFlashAttribute("error", "Something went wrong")
             return "redirect:/home"
         }
 
@@ -42,7 +48,8 @@ class EntryController(
         @RequestParam vaultId: UUID,
         @RequestParam vaultPassword: String,
         model: Model,
-        request: HttpServletRequest
+        request: HttpServletRequest,
+        redirectAttributes: RedirectAttributes
     ): String {
         val authentication: Authentication = SecurityContextHolder.getContext().authentication
         val loggedInUser = authentication.name
@@ -57,11 +64,11 @@ class EntryController(
                 session.setAttribute(vault.name, encryptionKey)
             return "redirect:/vaultDashboard/${vaultId}"
         } else {
-            model.addAttribute("error", "Invalid password!")
+                redirectAttributes.addFlashAttribute("error", "Invalid password!")
             return "redirect:/home"
         }
         } else {
-            model.addAttribute("error", "Vault not found!")
+            redirectAttributes.addFlashAttribute("error", "Vault not found!")
             return "redirect:/home"
         }
 
