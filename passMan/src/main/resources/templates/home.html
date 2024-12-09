@@ -3,27 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Your Vaults</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        thead, tbody, tfoot {
-            border: 2px solid black;
-        }
-
-        tr {
-            border: 1px solid black;
-        }
-        th {
-            border: 1px solid black;
-            padding: 8px;
-        }
-        td {
-            border: 1px solid black;
-            padding: 8px;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
 </head>
 <body>
 <h1>Welcome</h1>
@@ -42,11 +22,11 @@
 </form>
 
 <div th:if="${error}">
-    <p style="color: red;" th:text="${error}"></p>
+    <p th:text="${error}"></p>
 </div>
 
 <div th:if="${success}">
-    <p style="color: green;" th:text="${success}"></p>
+    <p th:text="${success}"></p>
 </div>
 
 <h2>Your Existing Vaults:</h2>
@@ -67,7 +47,6 @@
                 <input type="hidden" th:value="${vault.id}" name="vaultId">
                 <button type="submit">View Vault</button>
             </form>
-            <button type="button">Delete</button>
         </td>
     </tr>
     </tbody>

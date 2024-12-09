@@ -1,7 +1,8 @@
 package com.ics0022.passMan.controller
-import com.ics0022.passMan.model.Entry
+import com.ics0022.passMan.model.Vault
 import com.ics0022.passMan.repository.UserRepository
-import com.ics0022.passMan.service.EntryService
+import com.ics0022.passMan.repository.VaultRepository
+import com.ics0022.passMan.service.VaultService
 import com.ics0022.passMan.util.KDFutil
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.Authentication
@@ -9,16 +10,19 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.util.*
 
 @Controller
-class EntryController(
+class VaultController(
     private val userRepository: UserRepository,
-    private val entryService: EntryService,
+    private val vaultService: VaultService,
     private val passwordEncoder: PasswordEncoder,
+    private val vaultRepository: VaultRepository
 ) {
 
     @PostMapping("/home/createEntry")
@@ -33,7 +37,7 @@ class EntryController(
         val user = userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
 
         try{
-        entryService.createEntry(name = vaultName, rawPassword = masterPassword, user = user)
+        vaultService.createEntry(name = vaultName, rawPassword = masterPassword, user = user)
             redirectAttributes.addFlashAttribute("success", "Vault created successfully!")
             return "redirect:/home"
         } catch (e: Exception) {
@@ -41,6 +45,23 @@ class EntryController(
             return "redirect:/home"
         }
 
+    }
+
+    @PostMapping("/home/{vaultId}/delete")
+    fun deleteVault(@PathVariable vaultId: UUID, model: Model, request: HttpServletRequest): String {
+        val auth = SecurityContextHolder.getContext().authentication
+        val username = auth.name
+
+        val vault = vaultRepository.findById(vaultId).orElse(null) ?: return "errorPage"
+        val encryptionKey = request.session.getAttribute(vault.name) as? String
+            ?: return "errorPage"
+
+        if (vault.user.username != username) {
+            return "errorPage"
+        }
+
+        vaultRepository.delete(vault)
+        return "redirect:/home"
     }
 
     @PostMapping("/home")
@@ -53,7 +74,7 @@ class EntryController(
     ): String {
         val authentication: Authentication = SecurityContextHolder.getContext().authentication
         val loggedInUser = authentication.name
-        val vault: Entry? = entryService.getEntryById(vaultId)
+        val vault: Vault? = vaultService.getEntryById(vaultId)
 
         if (vault != null && vault.user.username == loggedInUser) {
             if (passwordEncoder.matches(vaultPassword, vault.password)) {

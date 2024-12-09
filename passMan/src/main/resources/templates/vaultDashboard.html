@@ -3,33 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title th:text="${vault.name}">Vault Dashboard</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        thead, tbody, tfoot {
-            border: 2px solid black;
-        }
-
-        tr {
-            border: 1px solid black;
-        }
-        th {
-            border: 1px solid black;
-            padding: 8px;
-        }
-        td {
-            border: 1px solid black;
-            padding: 8px;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css">
 </head>
 <body>
 <header>
     <h1 th:text="'Vault: ' + ${vault.name}">Vault</h1>
 </header>
 <a href="/home">Back to Home</a>
+<form th:action="@{/home/{vaultId}/delete(vaultId=${vault.id})}" method="post">
+    <button type="submit">Delete Vault</button>
+</form>
 <h2>Create a New Password Entry</h2>
 <form th:action="@{{vaultId}/createEntry(vaultId=${vault.id})}" method="post">
     <div>
@@ -44,11 +27,11 @@
 </form>
 
 <div th:if="${error}">
-    <p style="color: red;" th:text="${error}"></p>
+    <p th:text="${error}"></p>
 </div>
 
 <div th:if="${success}">
-    <p style="color: green;" th:text="${success}"></p>
+    <p th:text="${success}"></p>
 </div>
 
 <h2 th:text="'Vault ' + ${vault.name} + ' Password Entries'">Vault Passwords:</h2>
@@ -65,7 +48,9 @@
         <td th:text="${password.name}"></td>
         <td th:text="${password.password}"></td>
         <td>
-            <button type="button">Delete</button>
+            <form th:action="@{/vaultDashboard/{vaultId}/{passwordId}/delete(vaultId=${vault.id}, passwordId=${password.id})}" method="post">
+                <button type="submit">Delete</button>
+            </form>
         </td>
     </tr>
     </tbody>

@@ -19,7 +19,7 @@ class HomeController(
         val user = userRepository.findByUsername(username) ?: throw RuntimeException("User not found")
 
         val vaults = user.vaults
-        redirectAttributes.addFlashAttribute("vaults", vaults)
+        model.addAttribute("vaults", vaults)
 
         return "home"
     }

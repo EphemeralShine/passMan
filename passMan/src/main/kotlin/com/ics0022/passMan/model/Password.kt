@@ -14,7 +14,7 @@ data class Password (
     val password: String = "",
     @ManyToOne
     @JoinColumn(name = "vault_id", nullable = false)
-    val vault: Entry
+    val vault: Vault
 ){
     override fun toString(): String {
         return "Entry(name=$name, password=$password)"

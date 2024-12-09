@@ -19,10 +19,10 @@
     </div>
 </form>
 <div th:if="${error}">
-    <p style="color: red;" th:text="${error}"></p>
+    <p th:text="${error}"></p>
 </div>
 <div th:if="${success}">
-    <p style="color: green;" th:text="${success}"></p>
+    <p th:text="${success}"></p>
 </div>
 <div>
     <p>Have an account already? <a th:href="@{/login}">Login here</a></p>
