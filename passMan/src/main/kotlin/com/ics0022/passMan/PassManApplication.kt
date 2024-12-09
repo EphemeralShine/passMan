@@ -8,7 +8,7 @@ import com.ics0022.passMan.config.DotenvInitializer
 class PassManApplication
 
 fun main(args: Array<String>) {
-	val app = SpringApplicationBuilder(PassManApplication::class.java)
+	SpringApplicationBuilder(PassManApplication::class.java)
 		.initializers(DotenvInitializer())
 		.run(*args)
 
