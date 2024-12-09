@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter
 
 @Configuration
 class SecurityConfig(
@@ -41,6 +42,15 @@ class SecurityConfig(
             .csrf { csrf ->
                 csrf
                     .csrfTokenRepository(HttpSessionCsrfTokenRepository())
+            }
+            .headers { headers ->
+                headers
+                    .xssProtection { xss ->
+                        xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
+                    }
+                    .contentSecurityPolicy { csp ->
+                        csp.policyDirectives("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; font-src 'self'; frame-ancestors 'none';")
+                    }
             }
         return http.build()
     }
