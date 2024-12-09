@@ -34,6 +34,10 @@ User input is HTML-escaped through Thymeleaf templating engine. Server-side user
 The project uses Spring Data JPA with Hibernate ORM for database interactions, which simplifies CRUD operations and entity management. By using prepared statements, Hibernate automatically protects against SQL injection attacks, ensuring that user inputs are handled safely as data and not executable code. This approach, combined with Spring Data JPA's repository abstraction, helps prevent common vulnerabilities while providing a streamlined way to interact with the database.
 ## Communication encryption
 All communications happen over HTTPS to provide security and encryption.
+## Security Headers
+To enhance application security, HTTP security headers were implemented, including X-XSS-Protection and Content-Security-Policy (CSP). The X-XSS-Protection header is enabled to block potential XSS attacks by instructing the browser to block responses containing detected malicious scripts. Additionally, the CSP header restricts the loading and execution of resources to trusted origins, reducing the risk of content injection attacks such as XSS and clickjacking.
+
+
 
 # LOCAL SETUP
 ## Requirements
