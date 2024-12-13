@@ -2,6 +2,8 @@ package com.ics0022.passMan.controller
 import com.ics0022.passMan.model.Vault
 import com.ics0022.passMan.repository.UserRepository
 import com.ics0022.passMan.repository.VaultRepository
+import com.ics0022.passMan.service.InvalidPasswordException
+import com.ics0022.passMan.service.VaultNotFoundException
 import com.ics0022.passMan.service.VaultService
 import com.ics0022.passMan.util.KDFutil
 import jakarta.servlet.http.HttpServletRequest
@@ -51,50 +53,53 @@ class VaultController(
     }
 
     @PostMapping("/home/{vaultId}/delete")
-    fun deleteVault(@PathVariable vaultId: UUID, model: Model, request: HttpServletRequest): String {
+    fun deleteVault(@PathVariable vaultId: UUID, model: Model, request: HttpServletRequest,
+                    redirectAttributes: RedirectAttributes
+    ): String {
         val auth = SecurityContextHolder.getContext().authentication
         val username = auth.name
-
-        val vault = vaultRepository.findById(vaultId).orElse(null) ?: return "errorPage"
-        val encryptionKey = request.session.getAttribute(vault.name) as? String
-            ?: return "errorPage"
-
-        if (vault.user.username != username) {
-            return "errorPage"
+        try {
+            vaultService.deleteEntry(vaultId, request, username)
+        } catch (e: RuntimeException) {
+            redirectAttributes.addFlashAttribute("error", "Something went wrong")
+            return "redirect:/home"
         }
 
-        vaultRepository.delete(vault)
         return "redirect:/home"
     }
 
-    @PostMapping("/home")
-    fun handleVaultPassword(
-        @RequestParam vaultId: UUID,
-        @RequestParam vaultPassword: String,
-        model: Model,
-        request: HttpServletRequest,
-        redirectAttributes: RedirectAttributes
-    ): String {
-        val authentication: Authentication = SecurityContextHolder.getContext().authentication
-        val loggedInUser = authentication.name
-        val vault: Vault? = vaultService.getEntryById(vaultId)
+    @Controller
+    class VaultController(
+        private val vaultService: VaultService
+    ) {
 
-        if (vault != null && vault.user.username == loggedInUser) {
-            if (passwordEncoder.matches(vaultPassword, vault.password)) {
-                val kdfUtil = KDFutil()
-                val session = request.session
-                val encryptionKey = kdfUtil.deriveEncryptionKey(vaultPassword, vault.salt)
+        @PostMapping("/home")
+        fun handleVaultPassword(
+            @RequestParam vaultId: UUID,
+            @RequestParam vaultPassword: String,
+            model: Model,
+            request: HttpServletRequest,
+            redirectAttributes: RedirectAttributes
+        ): String {
+            return try {
+                val authentication: Authentication = SecurityContextHolder.getContext().authentication
+                val loggedInUser = authentication.name
 
-                session.setAttribute(vault.name, encryptionKey)
-            return "redirect:/vaultDashboard/${vaultId}"
-        } else {
-                redirectAttributes.addFlashAttribute("error", "Invalid password!")
-            return "redirect:/home"
+                val (vault, encryptionKey) = vaultService.validateAndPrepareVault(vaultId, vaultPassword, loggedInUser)
+
+                request.session.setAttribute(vault.name, encryptionKey)
+
+                "redirect:/vaultDashboard/${vault.id}"
+            } catch (e: VaultNotFoundException) {
+                redirectAttributes.addFlashAttribute("error", e.message)
+                "redirect:/home"
+            } catch (e: InvalidPasswordException) {
+                redirectAttributes.addFlashAttribute("error", e.message)
+                "redirect:/home"
+            } catch (e: AccessDeniedException) {
+                redirectAttributes.addFlashAttribute("error", e.message)
+                "redirect:/home"
+            }
         }
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Vault not found!")
-            return "redirect:/home"
-        }
-
     }
 }

@@ -1,10 +1,12 @@
 package com.ics0022.passMan.util
 
+import org.springframework.stereotype.Component
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+@Component
 class EncryptionUtil {
     private val GCM_NONCE_LENGTH = 12 // Recommended length for GCM nonce
     private val GCM_TAG_LENGTH = 128 // Authentication tag length (in bits)

@@ -4,7 +4,7 @@ import com.ics0022.passMan.model.Password
 import com.ics0022.passMan.repository.PasswordRepository
 import com.ics0022.passMan.repository.VaultRepository
 import com.ics0022.passMan.repository.UserRepository
-import com.ics0022.passMan.service.PasswordService
+import com.ics0022.passMan.service.*
 import com.ics0022.passMan.util.EncryptionUtil
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.context.SecurityContextHolder
@@ -20,37 +20,31 @@ class DashboardController(
     private val userRepository: UserRepository,
     private val passwordService: PasswordService,
     private val vaultRepository: VaultRepository,
-    private val passwordRepository: PasswordRepository
+    private val vaultService: VaultService
 ) {
     @GetMapping("/vaultDashboard/{vaultId}")
     fun showVault(
         @PathVariable vaultId: UUID,
         request: HttpServletRequest,
         model: Model,
-        redirectAttributes: RedirectAttributes
+        redirectAttributes: RedirectAttributes,
     ): String {
         val auth = SecurityContextHolder.getContext().authentication
         val username = auth.name
-        val user = userRepository.findByUsername(username) ?: return "errorPage"
 
-        val vault = user.vaults.find { it.id == vaultId }
-            ?: return "errorPage"
+        return try {
+            val (vault, decryptedPasswords) = vaultService.getDecryptedVaultPasswords(vaultId, username, request.session)
 
-        val session = request.session
-        val encryptionKey = session.getAttribute(vault.name) as? String
-            ?: return "errorPage"
-
-        val encPasswords = vault.passwords
-        val decryptedPasswords = mutableListOf<Password>()
-        val encryptionUtil = EncryptionUtil()
-            for (encPassword in encPasswords) {
-                val encryptedPassword = Base64.getDecoder().decode(encPassword.password)
-                val encryptionKeyBytes = Base64.getDecoder().decode(encryptionKey)
-                decryptedPasswords.add(encPassword.copy(password = encryptionUtil.decryptData(encryptedPassword, encryptionKeyBytes)))
-            }
-        model.addAttribute("vault", vault)
-        model.addAttribute("decryptedPasswords", decryptedPasswords)
-        return "/vaultDashboard"
+            model.addAttribute("vault", vault)
+            model.addAttribute("decryptedPasswords", decryptedPasswords)
+            "/vaultDashboard"
+        } catch (e: VaultAccessException) {
+            redirectAttributes.addFlashAttribute("error", e.message)
+            "redirect:/home"
+        } catch (e: EncryptionKeyNotFoundException) {
+            redirectAttributes.addFlashAttribute("error", e.message)
+            "redirect:/home"
+        }
     }
 
     @PostMapping("/vaultDashboard/{vaultId}/createEntry")
@@ -63,35 +57,47 @@ class DashboardController(
         redirectAttributes: RedirectAttributes): String {
         val auth = SecurityContextHolder.getContext().authentication
         val username = auth.name
-        val user = userRepository.findByUsername(username) ?: return "errorPage"
-        val vault = vaultRepository.findById(vaultId).getOrNull() ?: throw Exception("Vault not found")
-        val encryptionKey = request.session.getAttribute(vault.name) as? String
-            ?: return "errorPage"
+        try {
+            passwordService.createPassword(username, vaultId, request, name, password)
+        } catch (e: VaultNotFoundException) {
+            redirectAttributes.addFlashAttribute("error", e.message)
+            return "redirect:/home"
+        } catch (e: EncryptionKeyNotFoundException) {
+            redirectAttributes.addFlashAttribute("error", e.message)
+            return "redirect:/home"
+        }
 
-        try{
-            passwordService.createPassword(name = name, rawPassword = password, vaultId = vaultId, session = request.session)
-            } catch (e: Exception) {
-                return "errorPage"
-            }
         redirectAttributes.addFlashAttribute("success", "Password entry created successfully!")
         return "redirect:/vaultDashboard/${vaultId}"
     }
 
+
     @PostMapping("/vaultDashboard/{vaultId}/{passwordId}/delete")
-    fun deleteVault(@PathVariable vaultId: UUID, @PathVariable passwordId: UUID, request: HttpServletRequest, model: Model): String {
-        val auth = SecurityContextHolder.getContext().authentication
-        val username = auth.name
+        fun deleteVault(
+            @PathVariable vaultId: UUID,
+            @PathVariable passwordId: UUID,
+            request: HttpServletRequest,
+            redirectAttributes: RedirectAttributes
+        ): String {
+            val auth = SecurityContextHolder.getContext().authentication
+            val username = auth.name
 
-        val vault = vaultRepository.findById(vaultId).orElse(null) ?: return "errorPage"
-        val password = passwordRepository.findById(passwordId).orElse(null) ?: return "errorPage"
-        val encryptionKey = request.session.getAttribute(vault.name) as? String
-            ?: return "errorPage"
+            return try {
+                passwordService.deleteVaultPassword(vaultId, passwordId, username, request.session)
 
-        if (vault.user.username != username) {
-            return "errorPage"
+                "redirect:/vaultDashboard/$vaultId"
+            } catch (e: VaultNotFoundException) {
+                redirectAttributes.addFlashAttribute("error", e.message)
+                "redirect:/home"
+            } catch (e: PasswordNotFoundException) {
+                redirectAttributes.addFlashAttribute("error", e.message)
+                "redirect:/home"
+            } catch (e: EncryptionKeyNotFoundException) {
+                redirectAttributes.addFlashAttribute("error", e.message)
+                "redirect:/home"
+            } catch (e: AccessDeniedException) {
+                redirectAttributes.addFlashAttribute("error", e.message)
+                "redirect:/home"
+            }
         }
-
-        passwordRepository.delete(password)
-        return "redirect:/vaultDashboard/${vaultId}"
     }
-}
