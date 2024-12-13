@@ -14,12 +14,15 @@ class VaultService(
     private val vaultRepository: VaultRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
-
+    class InvalidInputException(message: String) : RuntimeException(message)
     fun isEntryNameExists(entryName: String): Boolean {
         return vaultRepository.findByName(entryName) != null
     }
 
     fun createEntry(name: String, rawPassword: String, user: User): Vault {
+        if (rawPassword.isEmpty()) {
+            throw InvalidInputException("Password cannot be empty")
+        }
         val encodedPassword = passwordEncoder.encode(rawPassword)
         val kdfUtil = KDFutil()
         val salt = kdfUtil.generateSalt()

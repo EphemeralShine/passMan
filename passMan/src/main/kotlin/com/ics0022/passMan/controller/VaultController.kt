@@ -43,6 +43,9 @@ class VaultController(
         } catch (e: Exception) {
             redirectAttributes.addFlashAttribute("error", "Something went wrong")
             return "redirect:/home"
+        } catch (e: VaultService.InvalidInputException) {
+            redirectAttributes.addFlashAttribute("error", "Vault password cannot be empty")
+            return "redirect:/home"
         }
 
     }

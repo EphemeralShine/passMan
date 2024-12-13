@@ -10,13 +10,10 @@ data class User(
     val id: Long = 0,
 
     @Column(nullable = false, unique = true)
-    val username: String = "",
+    val username: String,
 
     @Column(nullable = false)
-    val password: String = "",
-
-    @Column(nullable = false)
-    val masterPassword: String = "",
+    val password: String,
 
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val vaults: List<Vault> = mutableListOf()

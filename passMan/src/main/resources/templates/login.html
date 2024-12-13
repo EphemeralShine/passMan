@@ -18,11 +18,8 @@
         <button type="submit">Login</button>
     </div>
 </form>
-<div th:if="${error}">
-    <p th:text="${error}"></p>
-</div>
-<div th:if="${success}">
-    <p th:text="${success}"></p>
+<div>
+    <p th:if="${param.error}">Incorrect username or password.</p>
 </div>
 <div>
     <p>Don't have an account? <a th:href="@{/register}">Register here</a></p>

@@ -16,7 +16,7 @@ class RegistrationController(
 
     @GetMapping("/register")
     fun showRegistrationForm(model: Model): String {
-        model.addAttribute("user", User())
+        model.addAttribute("user", User(username = "", password = ""))
         return "register"
     }
 
@@ -31,8 +31,11 @@ class RegistrationController(
             userService.registerUser(username, password)
             redirectAttributes.addFlashAttribute("success", "User registered successfully!")
             return "redirect:/login"
-        } catch (e: Exception) {
+        } catch (e: UserService.UserAlreadyExistsException) {
             redirectAttributes.addFlashAttribute("error", "Username already in use")
+            return "redirect:/register"
+        } catch (e: UserService.InvalidInputException) {
+            redirectAttributes.addFlashAttribute("error", "Username and password must be at least 3 characters long")
             return "redirect:/register"
         }
     }

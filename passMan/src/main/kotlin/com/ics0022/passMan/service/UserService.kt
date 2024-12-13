@@ -10,10 +10,17 @@ class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
+    class UserAlreadyExistsException(message: String) : RuntimeException(message)
+    class InvalidInputException(message: String) : RuntimeException(message)
     fun registerUser(username: String, rawPassword: String): User {
         val existingUser = userRepository.findByUsername(username)
         if (existingUser != null) {
-            throw Exception("User already exists")
+            throw UserAlreadyExistsException("User already exists")
+        }
+        if (username.isEmpty() || rawPassword.isEmpty()) {
+            throw InvalidInputException("Username and password cannot be empty")
+        } else if (username.length < 3 || rawPassword.length < 3) {
+            throw InvalidInputException("Username and password must be at least 3 characters long")
         }
         val encodedPassword = passwordEncoder.encode(rawPassword)
         val user = User(username = username, password = encodedPassword)
